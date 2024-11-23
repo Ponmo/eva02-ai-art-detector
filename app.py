@@ -1,6 +1,8 @@
 import gradio as gr
 import requests
 from PIL import Image
+import os
+
 
 API_URL = "https://koj7q6d5hdy4h5tm.us-east-1.aws.endpoints.huggingface.cloud"
 headers = {
