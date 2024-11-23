@@ -80,7 +80,7 @@ def process_input(image=None, url=None):
 with gr.Blocks() as app:
     gr.Markdown("# Image Upload or URL Input App")
     gr.Markdown(
-        "Upload an image or provide an image URL to process the input and get the API response."
+        "Upload an image or provide an image URL to process the input and get the API response. The server may have a cold start."
     )
 
     with gr.Row():
