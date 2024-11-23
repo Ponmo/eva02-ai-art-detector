@@ -2,20 +2,19 @@ import gradio as gr
 import requests
 from PIL import Image
 import os
-import base64
 from io import BytesIO
+import json
 
-# Define the API URL and headers
+# Define the API URL and base headers (excluding Content-Type)
 API_URL = "https://koj7q6d5hdy4h5tm.us-east-1.aws.endpoints.huggingface.cloud"
-headers = {
+BASE_HEADERS = {
     "Authorization": f"Bearer {os.getenv('hf')}",
-    "Accept": "application/json",
-    # Note: 'Content-Type' is omitted because it will be set automatically based on the payload
+    "Accept": "application/json"
 }
 
 def query(url=None, image=None):
     """
-    Sends a request to the API endpoint with either a URL or an image file.
+    Sends a request to the API endpoint with either a URL or an image.
 
     Args:
         url (str): The URL of the image to process.
@@ -25,32 +24,44 @@ def query(url=None, image=None):
         dict: The JSON response from the API or an error message.
     """
     try:
-        if url:
-            # Prepare the payload for a URL input
+        if url and url.strip():
+            # Prepare headers and payload for URL input
+            headers = BASE_HEADERS.copy()
+            headers["Content-Type"] = "application/json"
             payload = {"inputs": url.strip()}
+            
+            # Send POST request with JSON payload
             response = requests.post(API_URL, headers=headers, json=payload)
-        elif image:
-            # Convert the PIL Image to bytes
-            buffered = BytesIO()
-            image.save(buffered, format="PNG")
-            buffered.seek(0)  # Move to the beginning of the buffer
 
-            # Prepare the files payload for an image upload
-            files = {"file": ("image.png", buffered, "image/png")}
-            response = requests.post(API_URL, headers=headers, files=files)
+        elif image:
+            # Prepare headers for image upload
+            headers = BASE_HEADERS.copy()
+            headers["Content-Type"] = "image/png"  # Change if using a different format
+            
+            # Convert PIL Image to bytes
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")  # Ensure format matches Content-Type
+            image_bytes = buffered.getvalue()
+            
+            # Send POST request with raw image bytes
+            response = requests.post(API_URL, headers=headers, data=image_bytes)
+        
         else:
             return {"error": "No valid input provided!"}
 
-        # Raise an HTTPError if the response was unsuccessful
+        # Raise an exception for HTTP error codes
         response.raise_for_status()
 
-        # Return the JSON response from the API
-        return response.json()
+        # Attempt to return JSON response
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return {"error": "Failed to decode JSON response from the API."}
 
     except requests.exceptions.HTTPError as http_err:
         return {"error": f"HTTP error occurred: {http_err}"}
     except Exception as err:
-        return {"error": f"An error occurred: {err}"}
+        return {"error": f"An unexpected error occurred: {err}"}
 
 def process_input(image=None, url=None):
     """
@@ -86,9 +97,9 @@ with gr.Blocks() as app:
 
     # Define the action when the button is clicked
     process_button.click(
-        fn=process_input,          # Function to execute
-        inputs=[image_input, url_input],  # Inputs to the function
-        outputs=output             # Output component to update
+        fn=process_input,                  # Function to execute
+        inputs=[image_input, url_input],    # Inputs to the function
+        outputs=output                       # Output component to update
     )
 
 # Launch the Gradio app
