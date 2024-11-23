@@ -12,7 +12,6 @@ headers = {
 }
 
 def query(payload):
-    print(payload)
     response = requests.post(API_URL, headers=headers, json=payload)
     return response.json()
 
@@ -21,8 +20,11 @@ def process_input(input):
         # Input is a URL
         payload = {"inputs": [input]}
     elif isinstance(input, Image.Image):
-        # Input is a PIL Image
-        payload = {"inputs": input}  # Assuming the API can handle raw image objects
+        # Convert PIL Image to base64 string
+        buffered = io.BytesIO()
+        input.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        payload = {"inputs": [img_str]}  # Send the base64 string to the API
     else:
         return {"error": "Invalid input type. Provide a valid URL or image."}
     
@@ -54,4 +56,4 @@ with gr.Blocks() as app:
 
     process_button.click(handle_input, inputs=[image_input, url_input], outputs=output)
 
-app.launch()
+app.launch(share=True)
