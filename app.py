@@ -12,17 +12,16 @@ def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
     return response.json()
 
-def process_file_or_image(file):
-    if file is None:
-        return "No file provided!"
-    
-    # Assuming API accepts file content as input
-    with open(file.name, "rb") as f:
+def process_file(filepath):
+    if not filepath:
+        return {"error": "No file provided!"}
+
+    # Assuming the API takes file content as input
+    with open(filepath, "rb") as f:
         file_content = f.read()
         
-    # Sending the content to the API
     response = query({
-        "inputs": file_content.decode("utf-8", errors="ignore"),  # Adjust as per API expectations
+        "inputs": file_content.decode("utf-8", errors="ignore"),  # Adjust encoding as per API expectations
         "parameters": {}
     })
     
@@ -30,13 +29,13 @@ def process_file_or_image(file):
 
 # Gradio app
 with gr.Blocks() as app:
-    gr.Markdown("# File/Image Upload App")
-    gr.Markdown("Upload an image or file and send its content to the API.")
+    gr.Markdown("# File Upload App")
+    gr.Markdown("Upload a file and send its content to the API.")
     
-    file_input = gr.File(label="Upload an Image or File", type="file")
+    file_input = gr.File(label="Upload a File", type="filepath")  # Use 'filepath' to pass the file path
     output = gr.JSON(label="API Response")
     
     process_button = gr.Button("Process")
-    process_button.click(process_file_or_image, inputs=file_input, outputs=output)
+    process_button.click(process_file, inputs=file_input, outputs=output)
 
 app.launch()
