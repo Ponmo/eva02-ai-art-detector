@@ -11,31 +11,36 @@ headers = {
     "Content-Type": "application/json"
 }
 
+
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
     return response.json()
 
-def process_input(input):
-    if isinstance(input, str) and input.startswith("http"):
-        # Input is a URL
-        payload = {"inputs": [input]}
-    elif isinstance(input, Image.Image):
-        # Convert PIL Image to base64 string
-        buffered = io.BytesIO()
-        input.save(buffered, format="PNG")
+def process_input(image=None, url=None):
+    if url and url.strip():  # Input is a URL
+        payload = {"inputs": [url.strip()]}
+    elif image:  # Input is an uploaded image
+        # Convert PIL Image to Base64
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        payload = {"inputs": [img_str]}  # Send the base64 string to the API
+        
+        payload = {"inputs": [img_str]}  # Sending Base64-encoded image
     else:
-        return {"error": "Invalid input type. Provide a valid URL or image."}
-    
-    response = query(payload)
-    return response
+        return {"error": "No valid input provided!"}
+
+    # Call the API
+    try:
+        response = query(payload)
+        return response
+    except Exception as e:
+        return {"error": str(e)}
 
 # Gradio app
 with gr.Blocks() as app:
-    gr.Markdown("# Image Upload App")
+    gr.Markdown("# Image Upload or URL Input App")
     gr.Markdown(
-        "Upload an image file or provide an image URL. The app will process the input and call the API."
+        "Upload an image or provide an image URL to process the input and get the API response."
     )
 
     with gr.Row():
@@ -46,14 +51,6 @@ with gr.Blocks() as app:
 
     process_button = gr.Button("Process")
 
-    def handle_input(image, url):
-        if url.strip():  # If URL is provided
-            return process_input(url.strip())
-        elif image:  # If image is uploaded
-            return process_input(image)
-        else:
-            return {"error": "No valid input provided!"}
-
-    process_button.click(handle_input, inputs=[image_input, url_input], outputs=output)
+    process_button.click(process_input, inputs=[image_input, url_input], outputs=output)
 
 app.launch(share=True)
