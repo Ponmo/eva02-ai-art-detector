@@ -12,4 +12,5 @@ license: unknown
 
 
 Check out the public inference Gradio app at https://huggingface.co/docs/hub/spaces-config-reference
+
 Check out the model and backend: https://huggingface.co/Noah-Wang/eva02-ai-art-detector-prod/blob/main/README.md
