@@ -12,7 +12,7 @@ license: unknown
 
 A transformer (eva-02) based model for detecting AI art. If it detects AI art, it'll also run a AI model classifier for which AI generator it's likely to have been generated with. Can upload a batch of up to ten images at a time to the serverless API for inference.
 
-Check out the public inference Gradio app at https://huggingface.co/docs/hub/spaces-config-reference
+Check out the public inference Gradio app at https://huggingface.co/spaces/Noah-Wang/eva02-ai-art-detector
 
 Check out the model and backend: https://huggingface.co/Noah-Wang/eva02-ai-art-detector-prod/blob/main/README.md
 
